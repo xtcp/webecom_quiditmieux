@@ -1,0 +1,42 @@
+# .htaccess a placer dans public/ (et idealement copie dans public/images/vente/ aussi,
+# en defense en profondeur, au cas ou une regle plus haute serait un jour retiree par erreur)
+
+# --- Empecher toute execution de script dans ce dossier ---
+# Apache 2.4+ (mod_php ou PHP-FPM avec handler ProxyPassMatch)
+<FilesMatch "\.(php|php3|php4|php5|php7|phtml|pht|phar|cgi|pl|py|sh|asp|aspx)$">
+    Require all denied
+</FilesMatch>
+
+# Compatibilite Apache 2.2 (ignoree si non supportee, ne casse rien en 2.4)
+<IfModule !mod_authz_core.c>
+    <FilesMatch "\.(php|php3|php4|php5|php7|phtml|pht|phar|cgi|pl|py|sh|asp|aspx)$">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
+</IfModule>
+
+# Desactive explicitement le moteur PHP sur ce dossier si mod_php est utilise
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php7.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php8.c>
+    php_flag engine off
+</IfModule>
+
+# --- Empecher le listing du contenu du dossier ---
+Options -Indexes -ExecCGI -Includes
+Options -MultiViews
+
+# --- Bloquer l'acces direct aux fichiers caches (.env, .git, etc.) ---
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# --- Forcer le navigateur a ne pas essayer d'interpreter un fichier selon son propre flair ---
+# (evite qu'un fichier mal detecte soit traite comme HTML/script par le navigateur)
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+</IfModule>

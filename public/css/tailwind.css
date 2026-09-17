@@ -1,0 +1,81 @@
+
+    @layer base {
+        h1 {
+            @apply mt-8 font-bold text-2xl;
+        }
+        h2, h3, h4 {
+            @apply mt-1 font-bold text-lg text-black/70;
+        }
+        table {
+            /* @apply border border-gray-700; */
+            @apply mt-2;
+        }
+        tr, td, th {
+            @apply border border-gray-300 p-2;
+        }
+        a {
+            @apply text-blue-400 hover:text-blue-600;
+        }
+        body {
+            @apply p-6;
+        }
+        table > caption {
+            @apply text-lg font-bold text-gray-400;
+        }
+        label {
+            @apply block mb-2.5 text-sm font-medium text-xs;    
+        }
+        textarea {
+            @apply w-full bg-gray-200 border border-gray-700 text-sm rounded-md focus:ring-gray-600 focus:border-gray-400 block px-3 py-2.5 shadow-lg placeholder:text-lg;
+        }
+        input[type=number] {
+            @apply w-[85px] bg-gray-200 border border-gray-700 text-sm rounded-md focus:ring-gray-600 focus:border-gray-400 block px-3 py-2.5 shadow-lg placeholder:text-lg;
+        }
+        input[type=text], input[type=password] {
+            @apply w-full bg-gray-200 border border-gray-700 text-base font-medium rounded-md focus:ring-gray-600 focus:border-gray-400 block px-3 py-2.5 shadow-lg placeholder:text-lg;
+        }
+        select, option, input, textarea, label {
+            @apply text-gray-600 ;
+        }
+        .button {
+            @apply max-h-11 text-gray-700 bg-gray-200 box-border border rounded-md border-transparent hover:bg-gray-400 hover:text-white focus:ring-4 focus:ring-blue-400 shadow-lg font-bold leading-5 text-sm px-4 py-2.5 focus:outline-none cursor-pointer;
+        }
+        .button_rouge {
+            @apply bg-red-200 border-red-600 hover:bg-red-400 focus:ring-4 focus:ring-red-400;
+        }
+        .button_rouge > a {
+            @apply text-red-600 hover:text-red-950;
+        }
+        form {
+            @apply flex items-center gap-4;
+        }
+        form > p {
+            @apply text-center;
+        }
+        form.column {
+            @apply flex flex-col gap-4;
+        }
+        .container {
+            @apply flex gap-8;
+        }
+        .list {
+            @apply flex-5/6;
+        }
+        .search {
+            @apply flex-1/6;
+        }
+        .search-line {
+            @apply w-full flex flex-row content-between gap-4;
+        }
+        .search-title {
+            @apply text-gray-600 flex-1/4 flex items-center;
+        }
+        .search-fields {
+            @apply flex-3/4 flex flex-row content-between items-center gap-4 text-right;
+        }
+        .data-line {
+            @apply flex gap-6 p-4 text-left;
+        }
+
+    }
+    

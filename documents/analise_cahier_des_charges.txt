@@ -1,0 +1,103 @@
+
+QuiDitMieux: plateforme d’enchères entre particuliers.
+
+
+Permet de proposer des objets à la vente et d’enchérir sur les objets proposés par les autres utilisateurs.
+
+Accessible à tout le monde. Consulter les objets proposés à la vente et d’effectuer des recherches sans compte.
+
+Pour ajouter, modifier, suprimer enchère ou participer (encherir), compte et connection necessaire
+
+
+Comptes utilisateurs:
+
+Creation de compte avec: pseudo, email, mot de passe
+(Sans collection d'info, seule le pseudo est visible publiquement)
+
+Connection avec email ou pseudo
+
+Création de compte sécurisée par anti-robots
+
+Un utilisateur peut modifier les informations de son compte
+
+
+Mise en vente d’un objet:
+
+Enchère:
+
+- vendeur, titre, catégorie, description, status, etat_produit (neuf, très bon état, bon état ou état correct), prix_depart, datetime, datetime_fin, une a trois (ilimitée) images
+
+- Désigner image de presentation (première uploadée par defaut) (images non obligatoire)
+
+- Enchère status = cree, placee (aprés placée, impossible de modifier ou supprimer)
+
+
+Enchères
+
+	Un utilisateur connecté peut enchérir sur un objet proposé par un autre utilisateur.
+
+	On peut suivre une enchère
+
+	Pour voir la liste d'enchères faut enchèrer
+
+	Il n’est pas possible d’enchérir sur sa propre annonce.
+
+
+	Une enchère doit obligatoirement être supérieure :
+	- au prix de départ si aucune enchère n’a encore été placée ;
+	- à la meilleure enchère existante dans le cas contraire.
+
+	Pour chaque annonce suivie, le site affiche notamment :
+
+	prix actuel (denier enchère)
+	nombre d'encheres (total enchères)
+	datetime_fin
+	pseudo vendeur
+	
+	
+	
+	- l’historique des enchères, avec le pseudo de l’enchérisseur, le montant et la date de
+	l’enchère.
+	L'historique des enchères n'est accessibles qu'au vendeur, et aux personnes ayant enchéri.
+
+
+	Une fois la date et l’heure de fin dépassées, aucune nouvelle enchère ne peut être
+	enregistrée.
+
+	L’utilisateur ayant proposé l’enchère la plus élevée est alors considéré comme le gagnant
+	de la vente.
+
+
+Tableau de bord:
+
+	Un tableau de bord est disponible pour chaque utilisateur avec :
+
+	Enchères en cours (derniere enchère mis a jour a chaque 10 secondes et a la fin info vendu/non vendu)
+
+	Mes Enchères suivies/enchèries (derniere enchère mis a jour a chaque 2 secondes (en vert si l'utilisateur est le mieux disant, en vert (jeune) sinon) et info de la fin)
+
+	Mes Enchères remportées
+
+
+Recherche des annonces
+
+	texte (recherche description ou titre ), categorie, etat (etat_objet), prix, status (en cours/terminé)
+
+	Recherche combinée
+
+	Résultats avec: titre, photo principale, prix actuel, datetime_fin
+
+
+	
+Catégories
+	
+	Par API externe
+		https://api.mywebecom.ovh/play/qdm/categ.php
+
+
+		Recuperer d’une catégorie par son identifiant
+			https://api.mywebecom.ovh/play/qdm/categ.php?id=17
+		Recherche de catégories par libellé (no-case, no-accent, multi-word, no-order)
+			https://api.mywebecom.ovh/play/qdm/categ.php?search=xxx
+
+Les résultats retournés par l’API sont classés par ordre alphabétique.
