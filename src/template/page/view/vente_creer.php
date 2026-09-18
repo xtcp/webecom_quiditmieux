@@ -10,26 +10,26 @@
 
 $labelsEtat = [1 => "Neuf", 2 => "Trés bon état", 3 => "Bon état", 4 => "État correct"];
 $labelsStatut = [0 => "À venir", 1 => "En cours"];
-$type = isset($objet) ? "edit" : "add";
+$type = empty($objet) ? "add" : "edit";
 
 $dateheureFinValue = '';
-if ($objet) {
+if (!empty($objet)) {
     $dateTime = \DateTime::createFromFormat('Y-m-d H:i:s', $objet->dateheure_fin->getValue());
     if ($dateTime) $dateheureFinValue = $dateTime->format('Y-m-d\TH:i:s');
 }
 
 use App\Composant\Debogueur;
-if (isset($message) && getenv("APP_DEBUG") == "true") Debogueur::message($message);
-if (isset($erreurs_form) && getenv("APP_DEBUG") == "true") Debogueur::message($erreurs_form);
+if (!empty($message) && getenv("APP_DEBUG") == "true") Debogueur::message($message);
+if (!empty($erreurs_form) && getenv("APP_DEBUG") == "true") Debogueur::message($erreurs_form);
 ?>
 <div id="vente-creer" class="max-w-5xl w-full mx-auto space-y-8 font-sans">
-    <?php if (isset($message)): ?>
+    <?php if (!empty($message)): ?>
         <div class="info-message text-<?= $message['couleur'] ?>-500 bg-<?= $message['couleur'] ?>-200 border rounded-xl border-<?= $message['couleur'] ?>-200 p-4">
             <?= $message["texte"] ?>
         </div>
     <?php endif; ?>
     <h2 class="text-lg font-bold text-slate-400 uppercase tracking-wide">
-    <?php if (isset($objet)): ?>
+    <?php if (!empty($objet)): ?>
         Modifier la vente
     <?php else: ?>
         Creer une vente
@@ -38,7 +38,7 @@ if (isset($erreurs_form) && getenv("APP_DEBUG") == "true") Debogueur::message($e
 
     <!-- Formulaire principal : champs directs de la vente -->
     <form id="form-modifier-vente" data-type="<?= $type ?>" action="index.php?vente&action=<?= $type ?>" method="post" enctype="multipart/form-data" class="space-y-8">
-    <?php if (isset($objet)): ?>
+    <?php if (!empty($objet)): ?>
         <input type="hidden" name="id" value="<?= e($objet->id) ?>">
     <?php endif; ?>
 
@@ -55,7 +55,7 @@ if (isset($erreurs_form) && getenv("APP_DEBUG") == "true") Debogueur::message($e
                             <button type="button" class="supprimer absolute top-1 right-1 w-5 h-5 flex items-center justify-center rounded-full bg-black/50 text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
                         </div>
                     </template>
-                    <input type="hidden" name="image_principale" id="image_principale" value="<?= $objet ? $objet->image_principale : 0 ?>" />
+                    <input type="hidden" name="image_principale" id="image_principale" value="<?= !empty($objet) ? $objet->image_principale : 0 ?>" />
                     <input type="file" id="input-images" name="images[]" accept="image/*" multiple class="hidden">
                     <input type="hidden" name="MAX_FILE_SIZE" value="2097152" />
                     <button type="button" onclick="document.getElementById('input-images').click()"
@@ -84,7 +84,7 @@ if (isset($erreurs_form) && getenv("APP_DEBUG") == "true") Debogueur::message($e
                 <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-10 items-start">
                     <div class="lg:col-span-4">
                         <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Titre</label>
-                        <input name="titre" type="text" required value="<?= $objet ? e($objet->titre) : '' ?>"
+                        <input name="titre" type="text" required value="<?= !empty($objet) ? e($objet->titre) : '' ?>"
                             class="w-full text-2xl sm:text-xl font-bold text-slate-900 tracking-tight px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all">
                         <p class="pt-2 ml-2 text-xs text-red-700"><?= e($erreurs_form["titre"] ?? ''); ?></p>
                     </div>
@@ -96,7 +96,7 @@ if (isset($erreurs_form) && getenv("APP_DEBUG") == "true") Debogueur::message($e
                             <div class="custom-select-container">
                                 <select name="status" class="pill-select">
                                     <?php foreach ($labelsStatut as $valeur => $label): ?>
-                                        <option value="<?= e($valeur) ?>" <?= $objet && $objet->status->getValue() == $valeur ? "selected" : "" ?>><?= e($label) ?></option>
+                                        <option value="<?= e($valeur) ?>" <?= !empty($objet) && $objet->status->getValue() == $valeur ? "selected" : "" ?>><?= e($label) ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
@@ -107,7 +107,7 @@ if (isset($erreurs_form) && getenv("APP_DEBUG") == "true") Debogueur::message($e
                             <div class="custom-select-container">
                                 <select name="etat_produit" class="pill-select">
                                     <?php foreach ($labelsEtat as $valeur => $label): ?>
-                                        <option value="<?= e($valeur) ?>" <?= $objet && $objet->etat_produit->getValue() == $valeur ? "selected" : "" ?>><?= e($label) ?></option>
+                                        <option value="<?= e($valeur) ?>" <?= !empty($objet) && $objet->etat_produit->getValue() == $valeur ? "selected" : "" ?>><?= e($label) ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
@@ -125,8 +125,9 @@ if (isset($erreurs_form) && getenv("APP_DEBUG") == "true") Debogueur::message($e
                     </div>
                 </div>
 
-                <!-- Catégories -->
+                
                 <div>
+                    <!-- Catégorie -->
                     <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Catégorie</h3>
                     <div class="flex flex-wrap items-center gap-2">
                         <div id="jsrecherche-categorie-container">
@@ -139,13 +140,13 @@ if (isset($erreurs_form) && getenv("APP_DEBUG") == "true") Debogueur::message($e
                             <ul>
                             </ul>
                         </div>
-                        
+                    <p class="pt-2 ml-2 text-xs text-red-700"><?= e($erreurs_form["categorie"] ?? ''); ?></p>
                     </div>
                     <!-- Description -->
                     <div class="w-full">
                         <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Description</label>
                         <textarea name="description" class="w-full min-h-28 p-4 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all leading-relaxed"
-                            required><?= $objet ? e($objet->description) : '' ?></textarea>
+                            required><?= !empty($objet) ? e($objet->description) : '' ?></textarea>
                     </div>
                 </div>
             </div>

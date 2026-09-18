@@ -132,7 +132,7 @@ class Controleur {
     }
 
     
-    public function add(?array $params = []): void {
+    public function add(?array $params = []) {
     // Function add - ACTION ajouter
     // Role: Ajoute un enregistrement d'un objet dans la base de données
     //

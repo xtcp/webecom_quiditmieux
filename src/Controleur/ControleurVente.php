@@ -329,7 +329,20 @@ class ControleurVente extends Controleur {
             }
         }
     }
-    
+    public function verifierDateHeureFin(string $champ) {
+        if (!isset($_POST[$champ])) {
+            return false;
+        }
+        $dateTime = \DateTime::createFromFormat('Y-m-d\TH:i:s', $_POST[$champ]);
+        $erreurs = \DateTime::getLastErrors();
+        if (!$dateTime || ($erreurs && ($erreurs['warning_count'] > 0 || $erreurs['error_count'] > 0))) {
+            return false;
+        }
+        if ($dateTime < new \DateTime()) {
+            return false;
+        }
+        return $_POST[$champ];
+    }
     public function del(?array $params = []) {
     // Function del
     // Role: Efface une vente de la base de données
@@ -386,13 +399,13 @@ class ControleurVente extends Controleur {
             $this->message("Vous devez être connecté(e) pour supprimer une vente!", "red", true);
         }
     }
-    public function add(?array $params = []): void {
+    public function add(?array $params = []) {
     // Function add
     // Role: Traite et prépare l'affichage de creation d'une vente OU traite la creation d'une vente
     //
     // Parametres: $params - GET/POST envoiés par le router
     // Retour: L'affichage du template
-
+    // #add
         $classe = self::MODELE;
         $table = constant($classe . "::TABLE");
 
@@ -404,44 +417,94 @@ class ControleurVente extends Controleur {
 
             if (empty($_POST)) {
                 $view = __DIR__ . '/../../src/template/page/view/' . $table . '_creer.php';
-                $template = 'view/'.$table.'_creer';
-                $this->afficher($template, ["table" => $table, "name" => $classe]);
+                $this->afficher('view/vente_creer', ["table" => $table, "name" => $classe]);
             } else {
-                $titre = $_POST['titre'];
-                $description = $_POST['description'];
-                $categorie = 1;
-                $utilisateur = $this->session->userConnected();
-                $paramsFiltres = [
-                    'utilisateur' => $utilisateur->id,
-                    'titre' => $titre,
-                    'description' => $description,
-                    'categorie' => $categorie
-                ];
-                $serviceImage = new UploadImages('./public/images/vente');
-                $this->depot->create(Vente::class, "", $paramsFiltres);
-                $venteId = $this->depot->dernierId();
-                if (!empty($_FILES['images']['name'][0])) {
-                    try { 
+                $retour = $this->processFields();
+
+                $message = $retour['message'] ?? "";
+                $erreurs_form = $retour['erreurs_form'] ?? "";
+
+                // Verifier s'il n'y a pas d'erreurs de formulaire
+                if (empty($message) && empty($erreurs_form)) {
+
+                    $serviceImage = new UploadImages('./public/images/vente');
+                    $fichiersStockes = []; // Le fichiers uploadés pour effacer en cas d'annulation
+                    
+                    try {
+                        $dateheure_fin = $this->verifierDateHeureFin('dateheure_fin');
+                        if (!$dateheure_fin) {
+                            $erreurs_form['dateheure_fin'] = "DateHeure Fin invalide: " . $_POST['dateheure_fin'];
+                            throw new \RuntimeException("Il y a des erreurs dans votre formulaire! Consulter les champs.");
+                        }
+                        if (!isset($_POST['categorie'])) {
+                            $erreurs_form['categorie'] = "La categorie est obligatoire!";
+                            throw new \RuntimeException("Il y a des erreurs dans votre formulaire! Consulter les champs.");
+                        }
+
+                        $utilisateur = $this->session->userConnected();
+                        $imagePrincipal = (int)($_POST['image_principale'] ?? 0);
+                        $paramsFiltres = [
+                            'utilisateur' => $utilisateur->id,
+                            'titre' => $_POST['titre'] ?? '',
+                            'description' => $_POST['description'] ?? '',
+                            'categorie' => $_POST['categorie'] ?? 0,
+                            'status' => $_POST['status'] ?? 0,
+                            'etat_produit' => $_POST['etat_produit'] ?? 0,
+                            'image_principale' => $imagePrincipal,
+                            'dateheure_fin' => $dateheure_fin,
+                        ];
                         $fichiersStockes = $serviceImage->televerserPlusieurs($_FILES['images']);
 
-                        $indexPrincipale = (int)($_POST['image_principale_index'] ?? 0);
+                        // Demarrer la transaction PDO BD
+                        $this->depot->debuterTransaction();
 
+                        $this->depot->create(Vente::class, "", $paramsFiltres);
+                        $venteId = $this->depot->dernierId();
+
+                        // Insérér les images uploadés en BDD
                         foreach ($fichiersStockes as $index => $nomFichier) {
-                            $this->depot->create("", "image", ["image" => $nomFichier]);
-                            $imageId = $this->depot->dernierId();
+                            $this->depot->create("", "image", ["image" => $nomFichier, "vente" => $venteId]);
+                        }
 
-                            $this->depot->create("", "image_vente", ["vente" => $venteId, "image" => $imageId]);
+                        $this->depot->validerTransaction();
+                        $message["couleur"] = "green";
+                        $message["texte"] = "La vente a bien été crée!";
 
-                            if ($index === $indexPrincipale) {
-                                $this->depot->update("", "vente", ["image_principale" => $imageId], ["id" => $venteId]);
+                        $objet = $this->depot->selectOne($classe, $table, ["id" => $venteId]);
+                        return $this->afficher("view/vente", ['objet' => $objet, 'id' => $venteId, 'message' => $message]);
+
+                    } catch (\RuntimeException $erreur) {
+                        // Upload lui-meme a echoue avant meme le debut de la transaction -> rien a annuler en base
+                        $this->depot->annulerTransaction();
+                        $message["couleur"] = "red";
+                        $message["texte"] = "Erreur upload d'images ou modification: " . $erreur->getMessage();
+
+                        if (getenv("APP_DEBUG") == "true") {
+                            Debogueur::message($erreur);
+                        }
+                        return $this->afficher('view/vente_creer', ['message' => $message, 'erreurs_form' => $erreurs_form]);
+                    } catch (\PDOException $erreur) {
+                        $this->depot->annulerTransaction();
+
+                        // Les fichiers sont deja sur le disque - effacer puisque le rollback SQL ne les touche pas
+                        foreach ($fichiersStockes as $nomFichier) {
+                            $chemin = './public/images/vente/' . $nomFichier;
+                            if (is_file($chemin)) {
+                                unlink($chemin);
                             }
                         }
-                    } catch (\RuntimeException $erreur) {
-                        $this->message("Erreur upload: " . $erreur->getMessage(), "red");
+                        $this->message("Erreur base de données! Contactez votre administrateur!", "red");
+                        return $this->afficher('view/vente_creer', ['message' => $message, 'erreurs_form' => $erreurs_form]);
                     }
+
+                } else {
+                    if ($message) {
+                        $message["couleur"] = "red";
+                        $message["texte"] = "Il y a des erreurs dans votre formulaire, consultez les champs.";
+                    }
+                    return $this->afficher('view/vente_creer', ['message' => $message, 'erreurs_form' => $erreurs_form]);
                 }
-                $objet = $this->depot->selectOne($classe, $table, ['id' => $venteId]);
-                if ($objet) $this->afficher('view/vente', ["objet" => $objet]);
+
             }
         }
     }
@@ -500,7 +563,7 @@ class ControleurVente extends Controleur {
             }
         }
     }
-    private function processFields(?Vente $objet) {
+    private function processFields(?Vente $objet = null) {
     // Function processFields
     // Role: Verifie les champs d'une vente ajoutée ou modifiée et retourne des message d'erreurs et les champs modifiées/validées
     //
@@ -535,13 +598,9 @@ class ControleurVente extends Controleur {
                 }
             }
             if ($champ == 'dateheure_fin') {
-                $dateTime = \DateTime::createFromFormat('Y-m-d\TH:i:s', $_POST[$champ]);
-                $erreurs = \DateTime::getLastErrors();
-                if (!$dateTime || ($erreurs && ($erreurs['warning_count'] > 0 || $erreurs['error_count'] > 0))) {
-                    $erreurs_form[$champ] = "Date de fin invalide!";
-                }
-                if ($dateTime < new \DateTime()) {
-                    $erreurs_form[$champ] = "La date de fin ne peut pas être antérieure à maintenant!";
+                $date = $this->verifierDateHeureFin($champ);
+                if (!$date) {
+                    $erreurs_form[$champ] = "Date Heure Fin invalide: " . $_POST[$champ];
                 }
             }
             if ($champ == 'etat_produit') {

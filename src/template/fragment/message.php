@@ -8,7 +8,7 @@
 
 ?>
 <div class="mt-4 w-full">
-    <div class="flex flex-col gap-4 border-solid border-2 rounded-sm border-<?= e($couleur); ?>-400 bg-<?= e($couleur); ?>-200 w-[max-content] p-4">
+    <div class="flex flex-col gap-4 border-solid border-2 rounded-sm border-<?= e($couleur); ?>-400 bg-<?= e($couleur); ?>-200 p-4">
 
         <div><?= e($message); ?></div>
         <?php if ($showButton): ?>
