@@ -1,6 +1,9 @@
 <?php
 // Fragment/main: Fragment pour le footer du site
 // Role: Affiche le pied de page avec le logo (texte), les liens de navigation et le lien vers la politique de confidentialité
+/**
+ * @var object|false $utilisateur - Utilisateur connecté ou false
+*/
 ?>
 <footer class="bg-white border-t border-slate-200/80 px-8 py-6">
     <div class="flex items-center justify-between flex-wrap gap-4">
@@ -11,7 +14,9 @@
 
         <nav class="flex items-center gap-6 text-sm">
             <a href="index.php">Page Principale</a>
-            <a href="index.php?categorie&action=list">Nos Categories</a>
+            <?php if ($utilisateur): ?>
+            <a href="index.php?utilisateur&action=index">Tableau de bord</a>
+            <?php endif; ?>
             <a href="index.php?app&action=politique">Politique de confidentialité</a>
         </nav>
 

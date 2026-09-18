@@ -150,7 +150,6 @@ if (isset($erreurs_form) && getenv("APP_DEBUG") == "true") Debogueur::message($e
     <div class="space-y-6">
         <h3 class="text-lg font-bold text-slate-900 border-b border-slate-200/60 pb-4">Encheres</h3>
 
-        
         <div class="space-y-4">
             <?php if (!empty($objet->enchere)): ?>
                 <?php foreach ($objet->enchere as $enchere): ?>

@@ -44,10 +44,12 @@ class ControleurVente extends Controleur {
     }
     public function filtrerVente(Vente $vente) : Vente|null {
         $utilisateur = $this->session->userConnected();
+        $statusVente = (int)$vente->status->getValue();
         // Mettre à jour le status de la vente si la date de fin à echoué
         $dateTime = \DateTime::createFromFormat('Y-m-d\TH:i:s', $vente->dateheure_fin);
         if ($dateTime < new \DateTime()) {
             $this->depot->update(Vente::class, "vente", ["status" => 2], ["id" => (int)$vente->id->getValue()]);
+            $statusVente = 2;
         }
         // Enlever la vente de la recherche si la vente n'est pas encore en cours sauf si:
         //   1) l'utilisateur n'est pas le proprietaire
@@ -57,7 +59,7 @@ class ControleurVente extends Controleur {
             $estProprietaire = true;
         }
         // Si la vente est inaactif, seule le propriétaire à accés aux donnés de la vente
-        if ($vente->status->getValue() === 0) {
+        if ($statusVente === 0) {
             if ($utilisateur) {
                 if (!$estProprietaire) {
                     return null;
@@ -68,7 +70,7 @@ class ControleurVente extends Controleur {
         }
         // Si la vente est actif ou terminée, empecher les utilisateurs non connectée ou qui n'ont pas enchéri
         //  d'avoir accés aux enchéres
-        if ($vente->status->getValue() > 0) {
+        if ($statusVente > 0) {
             $enleverEncheres = true;
             $aEncherie = false;
             if ($utilisateur) {
@@ -444,13 +446,13 @@ class ControleurVente extends Controleur {
         }
     }
     public function search(?array $params = []) {
-    // Fonction index - ACTION recherche
+    // Fonction search - ACTION recherche
     // Role: Traite les parametres du formulaire pour chercher un objet
     //    et prépare l'affichage des resultats
     //
     // Parametres: $params - Parametres GET/POST envoyez par le router
 
-        $classe = constant(get_called_class() . "::MODELE");
+        $classe = self::MODELE;
         $table = constant($classe . "::TABLE");
         $champs = constant($classe . "::CHAMPS");
         $champsRecherche = constant($classe . "::CHAMPS_RECHERCHE");

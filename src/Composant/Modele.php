@@ -95,11 +95,23 @@ abstract class Modele implements IteratorAggregate, JsonSerializable  {
         // Par défaut, retourner le tableau data générique
         return $this->data[$nomChamp] ?? null;
     }
-    public function __set(string $key, string $value) {
+    public function __set(string $key, mixed $value): void {
     // Methode magique __set  (Example: $modele->nomChamp = "test")
-    //   Role: Methode magique qui gere la suppression d'une valeur de l'objet
+    //   Role: Methode magique qui gere l'attribuition d'une valeur de l'objet.
+    //         Si le champ est connu du Modele (déclaré dans CHAMPS ou CHAMPS_ASSOCIES), on le
+    //         (re)construit en Champ typé — que ce champ ait déjà été hydraté ou non — sinon
+    //         __get ne le retrouverait jamais (il regarde champsInstancies en premier).
     //
     // Retour: Néant
+
+        $champs = defined(static::class . '::CHAMPS') ? static::CHAMPS : [];
+        $champsAssocies = defined(static::class . '::CHAMPS_ASSOCIES') ? static::CHAMPS_ASSOCIES : [];
+
+        if (array_key_exists($key, $champs) || array_key_exists($key, $champsAssocies)) {
+            $configChamp = $champs[$key] ?? $champsAssocies[$key];
+            $this->champsInstancies[$key] = new Champ($value, $configChamp);
+            return;
+        }
 
         $this->data[$key] = $value;
     }

@@ -5,7 +5,7 @@ import { Rechercher } from "./rechercher.mjs";
 
 import { initCategories, afficherCategorie } from "./categories.mjs";
 import { initImages } from "./images.mjs";
-
+import { initEncheres } from "./encheres.mjs";
 
 
 // ---------
@@ -282,3 +282,5 @@ if (containerEdit) {
     initImages();
 }
 initCategories();
+const idUtilisateur = document.querySelector('[data-utilisateur-id]')?.dataset.utilisateurId || null;
+initEncheres({ idUtilisateur });

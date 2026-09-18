@@ -370,7 +370,7 @@ class Controleur {
         if (!file_exists($fichierFragment)) {
             throw new Exception("Fragment non trouvé: " . $fragment);
         }
-
+        $data['utilisateur'] = $this->session->userConnected();
         extract($data);
         ob_start();
         include($fichierFragment);

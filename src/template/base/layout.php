@@ -25,9 +25,15 @@ $erreursCapturees = getenv('APP_DEBUG') == "true" ? \App\Fonction\GestionnaireEx
             <a href="index.php" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-100 transition-colors duration-150">
                 Page Principale
             </a>
-            <a href="index.php?categorie&action=list" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-100 transition-colors duration-150">
-                Nos Categories
+            <?php if ($utilisateur): ?>
+            <a href="index.php?utilisateur&action=index" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-100 transition-colors duration-150">
+                Tableau de bord
             </a>
+            <?php endif; ?>
+            <a href="index.php?app&action=politique" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-100 transition-colors duration-150">
+                Politique de confidentialité
+            </a>           
+
         </div>
 
         <div class="flex items-center gap-3">
