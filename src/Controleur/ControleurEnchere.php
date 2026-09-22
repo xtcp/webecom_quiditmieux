@@ -8,74 +8,102 @@
 namespace App\Controleur;
 
 use App\Composant\Controleur;
+use App\Composant\Debogueur;
 use App\Modele\Enchere;
 use App\Modele\Vente;
 
 class ControleurEnchere extends Controleur {
     public const MODELE = Enchere::class;
     private array $paramsRechercher = ["utilisateur", "vente"];
-
+    
     protected array $encheres = [];
 
-    public function add(?array $params = []): void {
+    public function add(?array $params = []) {
+
     // Function add
     // Role: Verifier si l'enchère existe dejá, sinon, continuer l'appel du contôleur générique
     //
     // Parametres: POST vente, enchere
     //      Néant
-        if ($this->session->isConnected()) {
-            if (isset($_POST["prix"]) && isset($_POST["vente"])) {
-                $idVente = (int)$_POST["vente"];
-                $utilisateur = $this->session->userConnected();
-                $idUtilisateur = (int)$utilisateur->id->getValue();
-                $prixEnchere = (int)$_POST["prix"];
-                $derniereEnchere = $this->depot->selectOne(self::MODELE, Enchere::TABLE, ["vente" => $idVente], "ORDER BY `" . Enchere::TABLE . "`.`id` DESC LIMIT 1");
-                if ($derniereEnchere) {
-                    if ((int)$derniereEnchere->utilisateur->id->getValue() === $idUtilisateur) {
-                        $this->message("Vous avez déjà lá derniére enchère!", "red");
-                    }
-                } else {
-                    $vente = $this->depot->selectOne(Vente::class, Vente::TABLE, ["id" => $idVente]);
-                    if ((int)$vente->utilisateur->id->getValue() === $idUtilisateur) {
-                        $this->message("Vous ne pouvez pas enchèrir votre propre vente!", "red");
-                    } else {
-                        $statusVente = (int)$vente->status->getValue();
-                        if ($statusVente == 2) {
-                            $this->message("La vente est terminée vous ne pouvez plus enchèrir!", "red");
+        if (isset($_POST["vente"])) {
+            $idVente = (int)$_POST["vente"];
+            $message = [];
+            $vente = $this->depot->selectOne(Vente::class, Vente::TABLE, ["id" => $idVente]);
+            if ($vente) {
+                
+                if ($this->session->isConnected()) {
+                    
+                    if (isset($_POST["prix"])) {
+                        
+                        $utilisateur = $this->session->userConnected();
+                        $idUtilisateur = (int)$utilisateur->id->getValue();
+                        $prixEnchere = (int)$_POST["prix"];
+                        $derniereEnchere = $this->depot->selectOne(self::MODELE, Enchere::TABLE, ["vente" => $idVente], "ORDER BY `" . Enchere::TABLE . "`.`id` DESC LIMIT 1");
+                        if ($derniereEnchere && ((int)$derniereEnchere->utilisateur->id->getValue() === $idUtilisateur)) {
+                            $message["couleur"] = "red";
+                            $message["texte"] = "Vous avez déjà lá derniére enchère!";
                         } else {
-                            if ($statusVente != 1) {
-                                $this->message("La vente n'est pas en cours, vous ne pouvez pas enchèrir!", "red");
+                            
+                            if ((int)$vente->utilisateur->id->getValue() === $idUtilisateur) {
+                                $message["couleur"] = "red";
+                                $message["texte"] = "Vous ne pouvez pas enchèrir votre propre vente!";
                             } else {
-                                $resultat = $this->depot->create(Enchere::class, Enchere::TABLE, ["vente" => $idVente, "utilisateur" => $idUtilisateur, "prix" => $prixEnchere]);
-                                if ($resultat == false) {
-                                    $this->message("Impossible d'enchèrir la vente - Contactez votre administrateur!", "red");
+                                $statusVente = (int)$vente->status->getValue();
+                                if ($statusVente == 2) {
+                                    $message["couleur"] = "red";
+                                    $message["texte"] = "La vente est terminée vous ne pouvez plus enchèrir!";
                                 } else {
-                                    if ($prixEnchere <= (int)$derniereEnchere->prix) {
-                                        $this->message("Pour enchérir, il faut choisir un montant supérieur à celui de la dernière enchère!", "red");
+                                    if ($statusVente != 1) {
+                                        $message["couleur"] = "red";
+                                        $message["texte"] = "La vente n'est pas en cours, vous ne pouvez pas enchèrir!";
                                     } else {
-                                        if ((int)$vente->prix_depart->getValue() <= $prixEnchere) {
-                                            $this->message("Pour enchérir, il faut choisir un montant supérieur au prix de départ!", "red");
+                                        $resultat = $this->depot->create(Enchere::class, Enchere::TABLE, ["vente" => $idVente, "utilisateur" => $idUtilisateur, "prix" => $prixEnchere]);
+                                        if ($resultat == false) {
+                                            $message["couleur"] = "red";
+                                            $message["texte"] = "Impossible d'enchèrir la vente - Contactez votre administrateur.";
                                         } else {
-                                            $dateTime = \DateTime::createFromFormat('Y-m-d\TH:i:s', $vente->dateheure_fin);
-                                            if ($dateTime < new \DateTime()) {
-                                                $this->depot->update(Vente::class, "vente", ["status" => 2], ["id" => $idVente]);
-                                                $this->message("La vent est terminée, vous ne pouvez plus enchérir!", "red");
+                                            if ($prixEnchere <= (int)$derniereEnchere->prix) {
+                                                $message["couleur"] = "red";
+                                                $message["texte"] = "Pour enchérir, il faut choisir un montant supérieur à celui de la dernière enchère.";
                                             } else {
-                                                $idAjoutee = $this->depot->dernierId();
-                                                $this->message("Encher ID " . $idAjoutee . " ajoutée!", "green");
+                                                if ((int)$vente->prix_depart->getValue() <= $prixEnchere) {
+                                                    $message["couleur"] = "red";
+                                                    $message["texte"] = "Pour enchérir, il faut choisir un montant supérieur au prix de départ.";
+                                                } else {
+                                                    $dateTime = \DateTime::createFromFormat('Y-m-d\TH:i:s', $vente->dateheure_fin);
+                                                    if ($dateTime < new \DateTime()) {
+                                                        $this->depot->update(Vente::class, "vente", ["status" => 2], ["id" => $idVente]);
+                                                        $message["couleur"] = "red";
+                                                        $message["texte"] = "La vent est terminée, vous ne pouvez plus enchérir!";
+                                                    } else {
+
+                                                        $idAjoutee = $this->depot->dernierId();
+                                                        $message["couleur"] = "green";
+                                                        $message["texte"] = "Encher ID " . $idAjoutee . " ajoutée!";
+                                                        
+                                                    }
+                                                }
                                             }
                                         }
                                     }
                                 }
                             }
                         }
+                    } else {
+                        $message["couleur"] = "red";
+                        $message["texte"] = "Vous devez choisir un prix pour enregistrer une vente!";
                     }
+                } else {
+                    $message["couleur"] = "red";
+                    $message["texte"] = "Vous devez être connecté(e) pour enregistrer une vente.";
                 }
+
+                return $this->afficher("view/vente", ['objet' => $vente, 'id' => $idVente, 'message' => $message]);
             } else {
-                $this->message("Manque des paramètres pour enchérire une vente!", "red");
+                $this->message("Vente avec l'ID ".$idVente." non trouvée!", "red");
             }
         } else {
-            $this->message("Vous devez vous connecter pour enchérire une vente!", "red");
+            $this->message("Manque l'ID de la vente!", "red");
         }
     }
     public function search(?array $params = []) {
@@ -161,7 +189,7 @@ class ControleurEnchere extends Controleur {
                     }
                 }
             }
-            return $this->afficher("", ["table" => $table, "name" => $classe, "objets" => $objets], true);
+            return $this->afficher("", ["table" => $table, "name" => $classe, "objets" => ($objets ?? [])], true);
         }
     }
 }

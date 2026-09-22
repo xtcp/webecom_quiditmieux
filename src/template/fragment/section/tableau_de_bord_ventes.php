@@ -3,7 +3,7 @@
 
 /**
  * @var array $encheresEnCours - Tableau avec toutes les enchères en cours
- * @var array $mesEncheresEnCours - Tableau avec les enchères en cours de l'utilisateur (suivis, enchèries)
+ * @var array $mesVentes - Tableau avec les enchères en cours de l'utilisateur (suivis, enchèries)
  * @var array $dernieresVentes - Tableau avec les dérniéres vente de l'utilisateur
  * @var array $mesEncheresRemportees - Tableau avec les dérniéres vente de l'utilisateur
  * 
@@ -14,10 +14,10 @@
 ?>
 <input type="hidden" id="utilisateur-connecte-id" value="<?= e($utilisateur->id ?? '') ?>">
 <div class="max-w-5xl w-full mx-auto py-8 px-4 font-sans" data-utilisateur-id="">
-    <input type="hidden" id="ids-mes-encheres-en-cours" value="<?= e(implode(',', array_map(fn($v) => (string)$v->id, $mesEncheresEnCours))) ?>">
+    <input type="hidden" id="ids-mes-encheres-en-cours" value="<?= e(implode(',', array_map(fn($v) => (string)$v->id, $encheresEnCours))) ?>">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 mt-7">
         <div>
-            <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Mes Enchères en cours</h2>
+            <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Mes Enchères et favoris en cours</h2>
             <p class="text-sm text-slate-500">Historique de vos dernières enchères</p>
         </div>
         <div class="flex items-center gap-3">
@@ -27,8 +27,8 @@
         </div>
     </div>
     <div id="mes-encheres-en-cours-container" class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden divide-y divide-slate-100">
-    <?php if (!empty($mesEncheresEnCours)): ?>
-    <?php foreach ($mesEncheresEnCours as $vente): ?>
+    <?php if (!empty($encheresEnCours)): ?>
+    <?php foreach ($encheresEnCours as $vente): ?>
         <div class="p-5 flex flex-col sm:flex-row items-start gap-4 hover:bg-slate-50/60 transition-all duration-150 group">
             
             <div class="sm:w-32 flex-shrink-0 pt-0.5">
@@ -82,8 +82,8 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 mt-7">
         <input type="hidden" id="ids-encheres-en-cours" value="<?= e(implode(',', array_map(fn($v) => (string)$v->id, $encheresEnCours))) ?>">
         <div>
-            <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Enchères en cours</h2>
-            <p class="text-sm text-slate-500">Dernières enchères en cours</p>
+            <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Mes Ventes</h2>
+            <p class="text-sm text-slate-500">Mes dernières ventes en cours</p>
         </div>
         <div class="flex items-center gap-3">
             <a href="index.php?vente&action=add" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-sm shadow-indigo-500/10 hover:shadow-md transition-all active:scale-[0.98]">
@@ -92,8 +92,8 @@
         </div>
     </div>
     <div id="encheres-en-cours-container" class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden divide-y divide-slate-100">
-    <?php if (!empty($encheresEnCours)): ?>
-    <?php foreach ($encheresEnCours as $vente): ?>
+    <?php if (!empty($mesVentes)): ?>
+    <?php foreach ($mesVentes as $vente): ?>
         <div class="p-5 flex flex-col sm:flex-row items-start gap-4 hover:bg-slate-50/60 transition-all duration-150 group">
             
             <div class="sm:w-32 flex-shrink-0 pt-0.5">
@@ -146,8 +146,8 @@
     </div>
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 mt-7">
         <div>
-            <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Mes Dernières Ventes</h2>
-            <p class="text-sm text-slate-500">Historique de vos dernières ventes</p>
+            <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Dernières Ventes En cours</h2>
+            <p class="text-sm text-slate-500">Historique des dernières ventes</p>
         </div>
         <div class="flex items-center gap-3">
             <a href="index.php?vente&action=add" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-sm shadow-indigo-500/10 hover:shadow-md transition-all active:scale-[0.98]">

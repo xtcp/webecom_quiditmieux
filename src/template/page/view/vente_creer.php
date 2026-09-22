@@ -148,6 +148,15 @@ if (!empty($erreurs_form) && getenv("APP_DEBUG") == "true") Debogueur::message($
                         <textarea name="description" class="w-full min-h-28 p-4 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all leading-relaxed"
                             required><?= !empty($objet) ? e($objet->description) : '' ?></textarea>
                     </div>
+                    <!-- Prix Depart -->
+                    <div class="w-full">
+                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Prix de depart</label>
+                        <div class="inline-flex items-center gap-2">
+                            <input name="prix_depart" class="w-45 py-2 px-6 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all leading-relaxed"
+                                required><?= !empty($objet) ? e($objet->prix_depart) : '' ?></textarea>
+                            <span>€</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

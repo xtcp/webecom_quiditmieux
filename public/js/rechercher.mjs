@@ -12,6 +12,8 @@ const templateChargement = document.getElementById("jsrecherche-template-chargem
 export class Rechercher {
 
     constructor(options) {
+
+        // ! A FAIRE: Utiliser URLSearchParam
         this.url = `?${options.nom}&action=search`;
 
         this.input = document.getElementById(`jsrecherche-${options.nom_elements}-input`);
@@ -82,11 +84,9 @@ export class Rechercher {
         });
 
         this.container.addEventListener("click", (e) => {
-            const id = e.target.closest(".jsrecherche-effacer");
-            if (!id) return;
-            if (confirm("Effacer "+this.nom+"?")) {
-                this.effacer(id);
-            }
+            const bouton = e.target.closest(".jsrecherche-effacer");
+            if (!bouton) return;
+            this.effacer(bouton.dataset.id);
         });
     }
     creerChargement() {

@@ -387,7 +387,19 @@ class Depot {
                     }
                     continue;
                 }
-
+                // Recherche par plage: un param se terminant en _min ou _max est traduit en plus grande ou egal, ou plus petit ou egal
+                if (str_ends_with($cle, '_min')) {
+                    $champReel = substr($cle, 0, -4);
+                    $paramsWHERE[] = "`$table`.`$champReel` >= :$cle";
+                    $paramsSQL[":$cle"] = "$valeur";
+                    continue;
+                }
+                if (str_ends_with($cle, '_max')) {
+                    $champReel = substr($cle, 0, -4);
+                    $paramsWHERE[] = "`$table`.`$champReel` <= :$cle";
+                    $paramsSQL[":$cle"] = "$valeur";
+                    continue;
+                }
                 $operateur = $champsRecherche[$cle]['champ_operateur'] ?? "EQUAL";
                 if (is_array($valeur)) {
                     $placeholders = [];

@@ -46,8 +46,11 @@ class ControleurVente extends Controleur {
         $utilisateur = $this->session->userConnected();
         $statusVente = (int)$vente->status->getValue();
         // Mettre à jour le status de la vente si la date de fin à echoué
-        $dateTime = \DateTime::createFromFormat('Y-m-d\TH:i:s', $vente->dateheure_fin);
-        if ($dateTime < new \DateTime()) {
+        $dateTime = \DateTime::createFromFormat('Y-m-d H:i:s', $vente->dateheure_fin);
+        if ($dateTime === false) {
+            Debogueur::message("Format de date invalide: " . $vente->dateheure_fin);
+        } elseif ($dateTime < new \DateTime()) {
+            Debogueur::message("Heure plus courte, MAJ status: ".$vente->dateheure_fin);
             $this->depot->update(Vente::class, "vente", ["status" => 2], ["id" => (int)$vente->id->getValue()]);
             $statusVente = 2;
         }
@@ -324,7 +327,7 @@ class ControleurVente extends Controleur {
                             }
                         }
                     }
-                    return $this->afficher('view/vente', ["objet" => $objet, "message" => $message]);
+                    return $this->afficher('view/vente', ["objet" => $objet, "message" => ($message ?? "")]);
                 }
             }
         }
@@ -535,16 +538,21 @@ class ControleurVente extends Controleur {
             }
         }
         
-        if (empty($paramsRecherche)) {
+        if (empty($paramsRecherche) && !isset($requete['prix_min']) && !isset($requete['prix_max'])) {
             $this->index($params);
         } else {
             if (isset($paramsRecherche["status"]) && ((int)$paramsRecherche["status"] !== 1 && (int)$paramsRecherche["status"] !== 2)) {
                $this->message("Filtres de recherche invalides!" . print_r($paramsRecherche), "blue", false);
                return;
             }
-
+            if (!empty($requete['prix_min']) && is_numeric($requete['prix_min'])) {
+                $paramsRecherche['prix_depart_min'] = $requete['prix_min'];
+            }
+            if (!empty($requete['prix_max']) && is_numeric($requete['prix_max'])) {
+                $paramsRecherche['prix_depart_max'] = $requete['prix_max'];
+            }
             $objets = $this->depot->select($classe, $table, $paramsRecherche);
-                        
+            
             if ($objets === false) {
                 $this->message("Erreur recherche - Contactez votre administrateur!", "red", false);
             } elseif ($objets === []) {

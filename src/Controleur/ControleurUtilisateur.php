@@ -9,6 +9,7 @@ namespace App\Controleur;
 
 use App\Composant\Controleur;
 use App\Composant\Debogueur;
+use App\Modele\Favori;
 use App\Modele\Utilisateur;
 use App\Modele\Vente;
 use Exception;
@@ -29,7 +30,7 @@ class ControleurUtilisateur extends Controleur {
     // Retour: Néant
  
         $encheresEnCours = [];
-        $mesEncheresEnCours = [];
+        $mesVentes = [];
         $mesEncheresRemportees = [];
         $dernieresVentes = [];
 
@@ -41,11 +42,15 @@ class ControleurUtilisateur extends Controleur {
         } else {
         
             $utilisateur = $this->session->userConnected();
+            $favoris = $this->depot->select(Favori::class, Favori::TABLE, ['utilisateur' => $utilisateur->id]);
+            $ventesFavorites = array_map(
+                fn($favori) => (int)$favori->vente->getValue(),
+                $favoris ?: []
+            );
             $encheresEnCours_paramsView['status'] = 1;
-            $mesEncheresEnCours_paramsView['enchere.utilisateur'] = $utilisateur->id;
-            $mesEncheresEnCours_paramsView['status'] = 1;
+            $mesVentes_paramsView['enchere.utilisateur'] = $utilisateur->id;
             $paramsView["utilisateur"] = $utilisateur->id;
-  
+
             $encheresEnCours = $this->depot->select(
                 Vente::class,
                 Vente::TABLE,
@@ -56,28 +61,31 @@ class ControleurUtilisateur extends Controleur {
                 $ids = array_column($encheresEnCours ?: [], 'id');
                 Debogueur::message($ids);
             }
-            $mesEncheresEnCours = $this->depot->select(
+            $mesVentes = $this->depot->select(
                 Vente::class,
                 Vente::TABLE,
-                $mesEncheresEnCours_paramsView,
+                $mesVentes_paramsView,
                 "ORDER BY (SELECT MAX(`e`.`dateheure`) FROM `enchere` `e` WHERE `e`.`vente` = `" . Vente::TABLE . "`.`id`) DESC LIMIT 10"
             );
-            
-            $dernieresVentes = $this->depot->select(Vente::class, Vente::TABLE, $paramsView, "ORDER BY `" . Vente::TABLE . "`.`dateheure_fin` LIMIT 10");
-
+            $encheresEnCoursFavorites = [];
+            foreach ($encheresEnCours ?: [] as $vente) {
+                if (in_array((int)$vente->id->getValue(), $ventesFavorites, true)) {
+                    $encheresEnCoursFavorites[] = $vente;
+                }
+            }
+            $dernieresVentes = $this->depot->select(Vente::class, Vente::TABLE, ["status" => 1], "ORDER BY `" . Vente::TABLE . "`.`dateheure_fin` LIMIT 10");
 
             // Afficher tableau de bord et la table des ventes 
 
             $fragment_dernieresVentes = $this->afficherFragment('section/tableau_de_bord_ventes', [
-                "encheresEnCours" => $encheresEnCours,
-                "mesEncheresEnCours" => $mesEncheresEnCours,
+                "encheresEnCours" => $encheresEnCoursFavorites,
+                "mesVentes" => $mesVentes,
                 "dernieresVentes" => $dernieresVentes
             ]);
 
             $this->afficher('tableau_de_bord', ['sectionVentes'  => $fragment_dernieresVentes]);
             
         }
-
     }
 
     public function telecharger() {
